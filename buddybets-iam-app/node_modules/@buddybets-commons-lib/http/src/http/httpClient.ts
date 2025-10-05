@@ -5,20 +5,29 @@ const httpClient: AxiosInstance = axios.create({
   withCredentials: true, 
   headers: {
     "Content-Type": "application/json"
-  } as AxiosRequestHeaders, // 🔹 Esto fuerza el tipo correcto
+  } 
 });
 
-// Interceptor request
+// 🔹 Interceptor único para headers comunes
 httpClient.interceptors.request.use(config => {
+  const userLang = localStorage.getItem('appLang') || navigator.language || 'en';
   const token = localStorage.getItem("auth_token");
-  if (token) {
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`
-    } as AxiosRequestHeaders; // 🔹 type assertion aquí también
+
+  if (config.headers && typeof config.headers.set === 'function') {
+    // Si headers es una instancia de AxiosHeaders
+    config.headers.set('Accept-Language', userLang);
+    if (token) 
+      config.headers.set('Authorization', `Bearer ${token}`);
+  } else if (config.headers) {
+    // Si headers es un objeto plano
+    config.headers['Accept-Language'] = userLang;
+    if (token) 
+      config.headers['Authorization'] = `Bearer ${token}`;
   }
+
   return config;
 });
+
 
 // Interceptor response
 httpClient.interceptors.response.use(

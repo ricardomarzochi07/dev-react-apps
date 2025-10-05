@@ -365,6 +365,7 @@ button:hover i, button:focus i, button:active i {
   color: red;
   font-size: 0.75rem;
   margin: 2px;
+  font-weight: 600; 
   /*padding-top: 2px; */
 }
 

@@ -117,11 +117,13 @@ module.exports = (env, argv) => {
         shared: {
           react: {
             singleton: true,
+            strictVersion: true,
             eager: true,
             requiredVersion: deps.react,
           },
           "react-dom": {
             singleton: true,
+            strictVersion: true,
             eager: true,
             requiredVersion: deps["react-dom"],
           },

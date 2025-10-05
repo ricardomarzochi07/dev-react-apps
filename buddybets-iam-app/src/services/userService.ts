@@ -1,56 +1,45 @@
 import { RegisterPayload } from '../types/RegisterPayload';
-import { apiGet, apiPost, httpClient } from "@buddybets-commons-lib/http";
-import { AxiosResponse } from "axios";
-import { StatusCodes } from 'http-status-codes';
+import { httpClient, safeRequest } from "@buddybets-commons-lib/http";
+import { HttpResponseSchema } from "@buddybets-commons-lib/http";
 import { API_PATHS } from './apiPaths';
+import { ValidatedResponse } from "@buddybets-commons-lib/http"; // Asegúrate de exportarlo donde lo definas
+import { AxiosResponse } from 'axios';
 
 interface SignupInitResponse {
-    jwt_nonce: string;
-    captcha_token: string;
-    jwt_csrf: string;
+  jwt_nonce: string;
+  captcha_token: string;
+  jwt_csrf: string;
 }
 
-interface SignupSubmitResponse {
-    status_response: boolean;
-    status_code: number;
-    data: string;
-    message: string;
-}
+
 
 export class UserService {
+  private static apiUrl_SIGNUP_SVC = process.env.REACT_APP_SIGNUP_GATEWAY_SERVICE_URL;
 
-    private static apiUrl_SIGNUP_SVC = process.env.REACT_APP_SIGNUP_GATEWAY_SERVICE_URL;
+  /** GET /signup/init */
+  static async getSignupInit(): Promise<ValidatedResponse<SignupInitResponse>> {
+    return safeRequest<SignupInitResponse>(() =>
+      httpClient
+        .get<HttpResponseSchema<SignupInitResponse>>(
+          `${this.apiUrl_SIGNUP_SVC}${API_PATHS.SIGNUP_INITIAL}`
+        )
+         .then((res: AxiosResponse<HttpResponseSchema<SignupInitResponse>>) => res.data)
+    );
+  }
 
-    static async getSignupInit(): Promise<SignupInitResponse> {
-        try {
-            const response = await apiGet<SignupInitResponse>(
-                `${this.apiUrl_SIGNUP_SVC}${API_PATHS.SIGNUP_INITIAL}`,
-            );
-            const initData = response.data ?? response; // fallback si .data es undefined
-            return initData;
-        } catch (err: any) {
-            console.error("Error detail:", err.response?.status, err.response?.data);
-            throw new Error("Error user initial");
-        }
-    }
-    
-    static async postRegisterSignupSubmit(data: RegisterPayload): Promise<SignupSubmitResponse> {
-        try {
-            const response: AxiosResponse<SignupSubmitResponse> = await apiPost<SignupSubmitResponse>(
-            `${this.apiUrl_SIGNUP_SVC}${API_PATHS.SIGNUP_SUBMIT}`,
-            data
-            );
-            return response.data;
-        } catch (error: any) {
-            if (error.response?.data) {
-                return error.response.data as SignupSubmitResponse;
-            }
-            return {
-                status_response: false,
-                status_code: 500,
-                data: 'Error Not Controler',
-                message: 'Error inesperado al registrar el usuario',
-            };
-        }
-    }
+  /** POST /signup/submit */
+  static async postRegisterSignupSubmit(
+    data: RegisterPayload
+  ): Promise<ValidatedResponse<RegisterPayload>> {
+    return safeRequest<RegisterPayload>(() =>
+      httpClient
+        .post<HttpResponseSchema<RegisterPayload>>(
+          `${this.apiUrl_SIGNUP_SVC}${API_PATHS.SIGNUP_SUBMIT}`,
+          data
+        )
+        .then((res: AxiosResponse<HttpResponseSchema<RegisterPayload>>) => res.data)
+    );
+  }
 }
+
+
